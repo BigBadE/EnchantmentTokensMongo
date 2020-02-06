@@ -1,7 +1,7 @@
 package bigbade.enchantmenttokensmongo;
 
-import bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
 import org.bukkit.entity.Player;
+import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
 
 public class EnchantmentTokensMongo implements CurrencyHandler {
     private long gems;
@@ -30,17 +30,12 @@ public class EnchantmentTokensMongo implements CurrencyHandler {
     }
 
     @Override
-    public CurrencyHandler newInstance(Player player) {
-        return new EnchantmentTokensMongo(player);
-    }
-
-    @Override
     public void savePlayer(Player player) {
 
     }
 
     @Override
     public String name() {
-        return null;
+        return "mongo";
     }
 }
