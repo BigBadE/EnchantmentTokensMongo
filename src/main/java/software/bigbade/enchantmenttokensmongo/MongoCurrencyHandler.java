@@ -1,4 +1,4 @@
-package bigbade.enchantmenttokensmongo;
+package software.bigbade.enchantmenttokensmongo;
 
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;

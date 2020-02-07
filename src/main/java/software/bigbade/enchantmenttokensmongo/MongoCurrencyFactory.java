@@ -1,4 +1,4 @@
-package bigbade.enchantmenttokensmongo;
+package software.bigbade.enchantmenttokensmongo;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -7,6 +7,7 @@ import org.bson.Document;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import software.bigbade.enchantmenttokens.EnchantmentTokens;
+import software.bigbade.enchantmenttokens.api.ExternalCurrencyData;
 import software.bigbade.enchantmenttokens.utils.ConfigurationManager;
 import software.bigbade.enchantmenttokens.utils.EnchantLogger;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyFactory;
@@ -17,6 +18,8 @@ import java.util.logging.Level;
 public class MongoCurrencyFactory implements CurrencyFactory {
     private MongoClient client;
     private MongoCollection<Document> collection;
+
+    private ExternalCurrencyData data;
 
     public MongoCurrencyFactory(EnchantmentTokens main, ConfigurationSection section) {
         EnchantLogger.LOGGER.log(Level.INFO, "Loading MongoDB database");
@@ -50,7 +53,17 @@ public class MongoCurrencyFactory implements CurrencyFactory {
     }
 
     @Override
-    public void close() {
+    public void setData(ExternalCurrencyData data) {
+        this.data = data;
+    }
+
+    @Override
+    public ExternalCurrencyData getData() {
+        return data;
+    }
+
+    @Override
+    public void shutdown() {
         client.close();
     }
 }
