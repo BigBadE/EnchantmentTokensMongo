@@ -1,6 +1,8 @@
 package software.bigbade.enchantmenttokensmongo;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bukkit.entity.Player;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
@@ -31,9 +33,7 @@ public class MongoCurrencyHandler implements CurrencyHandler {
 
     @Override
     public void savePlayer(Player player) {
-        Document query = new Document();
-        query.put("uuid", player.getUniqueId());
-        collection.find(query).first().replace("gems", gems);
+        collection.updateOne(Filters.eq("uuid", player.getUniqueId()), Updates.set("gems", gems));
     }
 
     @Override

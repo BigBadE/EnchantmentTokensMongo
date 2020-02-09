@@ -1,13 +1,16 @@
 package software.bigbade.enchantmenttokensmongo;
 
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoCredential;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import software.bigbade.enchantmenttokens.EnchantmentTokens;
-import software.bigbade.enchantmenttokens.api.ExternalCurrencyData;
 import software.bigbade.enchantmenttokens.utils.ConfigurationManager;
 import software.bigbade.enchantmenttokens.utils.EnchantLogger;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyFactory;
@@ -19,15 +22,36 @@ public class MongoCurrencyFactory implements CurrencyFactory {
     private MongoClient client;
     private MongoCollection<Document> collection;
 
-    private ExternalCurrencyData data;
-
     public MongoCurrencyFactory(EnchantmentTokens main, ConfigurationSection section) {
-        EnchantLogger.LOGGER.log(Level.INFO, "Loading MongoDB database");
-        client = MongoClients.create((String) ConfigurationManager.getValueOrDefault("database", section, null));
+        EnchantLogger.log(Level.INFO, "Loading MongoDB database");
+
+        String username = (String) ConfigurationManager.getValueOrDefault("username", section, null);
+        String password = (String) ConfigurationManager.getValueOrDefault("password", section, null);
+
+        MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString((String) ConfigurationManager.getValueOrDefault("database", section, ""))).applicationName(EnchantmentTokens.NAME);
+        if (username != null && password != null)
+            switch ((String) ConfigurationManager.getValueOrDefault("security", section, "DEFAULT")) {
+                case "DEFAULT":
+                    builder.credential(MongoCredential.createCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
+                    break;
+                case "SHA256":
+                    builder.credential(MongoCredential.createScramSha256Credential(username, EnchantmentTokens.NAME, password.toCharArray()));
+                    break;
+                case "SHA1":
+                    builder.credential(MongoCredential.createScramSha1Credential(username, EnchantmentTokens.NAME, password.toCharArray()));
+                    break;
+                case "PLAIN":
+                    builder.credential(MongoCredential.createPlainCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
+                    EnchantLogger.log(Level.WARNING, "PLAIN VERIFICATION IS ENABLED. NOT SUGGESTED!");
+            }
+
+
+        client = MongoClients.create(builder.build());
         String collectionName = (String) ConfigurationManager.getValueOrDefault("section", section, "players");
         collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
-        if(collection == null) {
-            EnchantLogger.LOGGER.log(Level.INFO, "Creating new database section");
+
+        if (collection == null) {
+            EnchantLogger.log(Level.INFO, "Creating new database section");
             client.getDatabase(EnchantmentTokens.NAME).createCollection(collectionName);
             collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
         }
@@ -35,14 +59,11 @@ public class MongoCurrencyFactory implements CurrencyFactory {
 
     @Override
     public CurrencyHandler newInstance(Player player) {
-        Document document;
-        Document query = new Document();
-        query.put("uuid", player.getUniqueId());
-        document = collection.find(query).first();
-        if(document == null) {
-            document = new Document();
-            document.put("uuid", player.getUniqueId());
+        Document document = collection.find(Filters.eq("uuid", player.getUniqueId())).first();
+        if (document == null) {
+            document = new Document("uuid", player.getUniqueId());
             document.put("gems", 0L);
+            collection.insertOne(document);
         }
         return new MongoCurrencyHandler(collection, document.getLong("gems"));
     }
@@ -50,16 +71,6 @@ public class MongoCurrencyFactory implements CurrencyFactory {
     @Override
     public String name() {
         return "mongo";
-    }
-
-    @Override
-    public void setData(ExternalCurrencyData data) {
-        this.data = data;
-    }
-
-    @Override
-    public ExternalCurrencyData getData() {
-        return data;
     }
 
     @Override
