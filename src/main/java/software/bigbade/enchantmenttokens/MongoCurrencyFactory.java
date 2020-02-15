@@ -1,4 +1,4 @@
-package software.bigbade.enchantmenttokensmongo;
+package software.bigbade.enchantmenttokens;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
@@ -10,7 +10,6 @@ import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import software.bigbade.enchantmenttokens.EnchantmentTokens;
 import software.bigbade.enchantmenttokens.utils.ConfigurationManager;
 import software.bigbade.enchantmenttokens.utils.EnchantLogger;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyFactory;

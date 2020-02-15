@@ -1,4 +1,4 @@
-package software.bigbade.enchantmenttokensmongo;
+package software.bigbade.enchantmenttokens;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
