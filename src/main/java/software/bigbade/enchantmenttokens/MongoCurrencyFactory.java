@@ -10,8 +10,8 @@ import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import software.bigbade.enchantmenttokens.utils.ConfigurationManager;
 import software.bigbade.enchantmenttokens.utils.EnchantLogger;
+import software.bigbade.enchantmenttokens.utils.configuration.ConfigurationType;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyFactory;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
 
@@ -24,15 +24,12 @@ public class MongoCurrencyFactory implements CurrencyFactory {
     public MongoCurrencyFactory(EnchantmentTokens main, ConfigurationSection section) {
         EnchantLogger.log(Level.INFO, "Loading MongoDB database");
 
-        String username = (String) ConfigurationManager.getValueOrDefault("username", section, null);
-        String password = (String) ConfigurationManager.getValueOrDefault("password", section, null);
+        String username = new ConfigurationType<String>(null).getValue("username", section);
+        String password = new ConfigurationType<String>(null).getValue("password", section);
 
-        MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString((String) ConfigurationManager.getValueOrDefault("database", section, ""))).applicationName(EnchantmentTokens.NAME);
+        MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString(new ConfigurationType<String>(null).getValue("database", section))).applicationName(EnchantmentTokens.NAME);
         if (username != null && password != null)
-            switch ((String) ConfigurationManager.getValueOrDefault("security", section, "DEFAULT")) {
-                case "DEFAULT":
-                    builder.credential(MongoCredential.createCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
-                    break;
+            switch (new ConfigurationType<String>("DEFAULT").getValue("security", section)) {
                 case "SHA256":
                     builder.credential(MongoCredential.createScramSha256Credential(username, EnchantmentTokens.NAME, password.toCharArray()));
                     break;
@@ -42,11 +39,15 @@ public class MongoCurrencyFactory implements CurrencyFactory {
                 case "PLAIN":
                     builder.credential(MongoCredential.createPlainCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
                     EnchantLogger.log(Level.WARNING, "PLAIN VERIFICATION IS ENABLED. NOT SUGGESTED!");
+                    break;
+                case "DEFAULT":
+                default:
+                    builder.credential(MongoCredential.createCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
             }
 
 
         client = MongoClients.create(builder.build());
-        String collectionName = (String) ConfigurationManager.getValueOrDefault("section", section, "players");
+        String collectionName = new ConfigurationType<String>("players").getValue("section", section);
         collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
 
         if (collection == null) {
