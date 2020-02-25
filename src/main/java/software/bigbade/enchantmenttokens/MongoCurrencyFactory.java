@@ -20,6 +20,7 @@ import java.util.logging.Level;
 public class MongoCurrencyFactory implements CurrencyFactory {
     private MongoClient client;
     private MongoCollection<Document> collection;
+    private boolean loaded;
 
     public MongoCurrencyFactory(EnchantmentTokens main, ConfigurationSection section) {
         EnchantLogger.log(Level.INFO, "Loading MongoDB database");
@@ -55,6 +56,8 @@ public class MongoCurrencyFactory implements CurrencyFactory {
             client.getDatabase(EnchantmentTokens.NAME).createCollection(collectionName);
             collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
         }
+
+        loaded = true;
     }
 
     @Override
@@ -76,5 +79,10 @@ public class MongoCurrencyFactory implements CurrencyFactory {
     @Override
     public void shutdown() {
         client.close();
+    }
+
+    @Override
+    public boolean loaded() {
+        return loaded;
     }
 }
