@@ -25,12 +25,12 @@ public class MongoCurrencyFactory implements CurrencyFactory {
     public MongoCurrencyFactory(EnchantmentTokens main, ConfigurationSection section) {
         EnchantLogger.log(Level.INFO, "Loading MongoDB database");
 
-        String username = new ConfigurationType<String>(null).getValue("username", section);
-        String password = new ConfigurationType<String>(null).getValue("password", section);
+        String username = new ConfigurationType<>("").getValue("username", section);
+        String password = new ConfigurationType<>("").getValue("password", section);
 
-        MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString(new ConfigurationType<String>(null).getValue("database", section))).applicationName(EnchantmentTokens.NAME);
-        if (username != null && password != null)
-            switch (new ConfigurationType<String>("DEFAULT").getValue("security", section)) {
+        MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString(new ConfigurationType<String>("").getValue("database", section))).applicationName(EnchantmentTokens.NAME);
+        if (!username.equals("") && !password.equals(""))
+            switch (new ConfigurationType<>("DEFAULT").getValue("security", section)) {
                 case "SHA256":
                     builder.credential(MongoCredential.createScramSha256Credential(username, EnchantmentTokens.NAME, password.toCharArray()));
                     break;
@@ -48,7 +48,7 @@ public class MongoCurrencyFactory implements CurrencyFactory {
 
 
         client = MongoClients.create(builder.build());
-        String collectionName = new ConfigurationType<String>("players").getValue("section", section);
+        String collectionName = new ConfigurationType<>("players").getValue("section", section);
         collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
 
         if (collection == null) {
