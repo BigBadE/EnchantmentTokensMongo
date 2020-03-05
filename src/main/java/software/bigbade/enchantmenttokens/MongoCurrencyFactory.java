@@ -17,12 +17,13 @@ import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
 
 import java.util.logging.Level;
 
-public class MongoCurrencyFactory implements CurrencyFactory {
+public class MongoCurrencyFactory extends CurrencyFactory {
     private MongoClient client;
     private MongoCollection<Document> collection;
     private boolean loaded;
 
     public MongoCurrencyFactory(EnchantmentTokens main, ConfigurationSection section) {
+        super("mongo");
         EnchantLogger.log(Level.INFO, "Loading MongoDB database");
 
         String username = new ConfigurationType<>("").getValue("username", section);

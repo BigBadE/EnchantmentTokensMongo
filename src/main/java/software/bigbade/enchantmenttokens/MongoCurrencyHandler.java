@@ -7,37 +7,17 @@ import org.bson.Document;
 import org.bukkit.entity.Player;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
 
-public class MongoCurrencyHandler implements CurrencyHandler {
-    private long gems;
+public class MongoCurrencyHandler extends CurrencyHandler {
     private MongoCollection<Document> collection;
 
     public MongoCurrencyHandler(MongoCollection<Document> collection, long gems) {
-        this.gems = gems;
+        super("mongo");
+        setAmount(gems);
         this.collection = collection;
     }
 
     @Override
-    public long getAmount() {
-        return gems;
-    }
-
-    @Override
-    public void setAmount(long amount) {
-        gems = amount;
-    }
-
-    @Override
-    public void addAmount(long amount) {
-        gems += amount;
-    }
-
-    @Override
-    public void savePlayer(Player player) {
-        collection.updateOne(Filters.eq("uuid", player.getUniqueId()), Updates.set("gems", gems));
-    }
-
-    @Override
-    public String name() {
-        return "mongo";
+    public void savePlayer(Player player, boolean async) {
+        collection.updateOne(Filters.eq("uuid", player.getUniqueId()), Updates.set("gems", getAmount()));
     }
 }
