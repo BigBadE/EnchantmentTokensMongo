@@ -22,14 +22,14 @@ public class MongoCurrencyFactory extends CurrencyFactory {
     private MongoCollection<Document> collection;
     private boolean loaded;
 
-    public MongoCurrencyFactory(EnchantmentTokens main, ConfigurationSection section) {
+    public MongoCurrencyFactory(ConfigurationSection section) {
         super("mongo");
         EnchantLogger.log(Level.INFO, "Loading MongoDB database");
 
         String username = new ConfigurationType<>("").getValue("username", section);
         String password = new ConfigurationType<>("").getValue("password", section);
 
-        MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString(new ConfigurationType<String>("").getValue("database", section))).applicationName(EnchantmentTokens.NAME);
+        MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString(new ConfigurationType<>("").getValue("database", section))).applicationName(EnchantmentTokens.NAME);
         if (!username.equals("") && !password.equals(""))
             switch (new ConfigurationType<>("DEFAULT").getValue("security", section)) {
                 case "SHA256":
