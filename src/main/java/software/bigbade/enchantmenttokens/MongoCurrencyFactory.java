@@ -14,10 +14,11 @@ import software.bigbade.enchantmenttokens.utils.EnchantLogger;
 import software.bigbade.enchantmenttokens.utils.configuration.ConfigurationType;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyFactory;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
+import software.bigbade.enchantmenttokens.utils.currency.EnchantCurrencyFactory;
 
 import java.util.logging.Level;
 
-public class MongoCurrencyFactory extends CurrencyFactory {
+public class MongoCurrencyFactory extends EnchantCurrencyFactory {
     private MongoClient client;
     private MongoCollection<Document> collection;
     private boolean loaded;
