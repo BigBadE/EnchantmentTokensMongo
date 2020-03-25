@@ -10,22 +10,19 @@ import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import software.bigbade.enchantmenttokens.utils.EnchantLogger;
-import software.bigbade.enchantmenttokens.utils.configuration.ConfigurationType;
-import software.bigbade.enchantmenttokens.utils.currency.CurrencyFactory;
-import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
-import software.bigbade.enchantmenttokens.utils.currency.EnchantCurrencyFactory;
+import software.bigbade.enchantmenttokens.configuration.ConfigurationType;
+import software.bigbade.enchantmenttokens.currency.CurrencyFactory;
+import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
 import java.util.logging.Level;
 
-public class MongoCurrencyFactory extends EnchantCurrencyFactory {
+public class MongoCurrencyFactory implements CurrencyFactory {
     private MongoClient client;
     private MongoCollection<Document> collection;
     private boolean loaded;
 
     public MongoCurrencyFactory(ConfigurationSection section) {
-        super("mongo");
-        EnchantLogger.log(Level.INFO, "Loading MongoDB database");
+        EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Loading MongoDB database");
 
         String username = new ConfigurationType<>("").getValue("username", section);
         String password = new ConfigurationType<>("").getValue("password", section);
@@ -41,7 +38,10 @@ public class MongoCurrencyFactory extends EnchantCurrencyFactory {
                     break;
                 case "PLAIN":
                     builder.credential(MongoCredential.createPlainCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
-                    EnchantLogger.log(Level.WARNING, "PLAIN VERIFICATION IS ENABLED. NOT SUGGESTED!");
+                    EnchantmentTokens.getEnchantLogger().log(Level.WARNING, "PLAIN VERIFICATION IS ENABLED. NOT SUGGESTED!");
+                    break;
+                case "SSH":
+                    builder.credential(MongoCredential.createMongoX509Credential());
                     break;
                 case "DEFAULT":
                 default:
@@ -54,7 +54,7 @@ public class MongoCurrencyFactory extends EnchantCurrencyFactory {
         collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
 
         if (collection == null) {
-            EnchantLogger.log(Level.INFO, "Creating new database section");
+            EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Creating new database section");
             client.getDatabase(EnchantmentTokens.NAME).createCollection(collectionName);
             collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
         }
