@@ -25,13 +25,17 @@ import org.bson.Document;
 import org.bukkit.entity.Player;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
+import java.util.Locale;
+
 public class MongoCurrencyHandler implements CurrencyHandler {
     private MongoCollection<Document> collection;
-    private long gems = 0;
+    private long gems;
+    private Locale locale;
 
-    public MongoCurrencyHandler(MongoCollection<Document> collection, long gems) {
+    public MongoCurrencyHandler(MongoCollection<Document> collection, long gems, Locale locale) {
         setAmount(gems);
         this.collection = collection;
+        this.locale = locale;
     }
 
     @Override
@@ -51,7 +55,17 @@ public class MongoCurrencyHandler implements CurrencyHandler {
 
     @Override
     public void savePlayer(Player player, boolean async) {
-        collection.updateOne(Filters.eq("uuid", player.getUniqueId()), Updates.set("gems", getAmount()));
+        collection.updateOne(Filters.eq("uuid", player.getUniqueId()), Updates.combine(Updates.set("gems", getAmount()), Updates.set("locale", locale.toLanguageTag())));
+    }
+
+    @Override
+    public Locale getLocale() {
+        return locale;
+    }
+
+    @Override
+    public void setLocale(Locale language) {
+        locale = language;
     }
 
     @Override

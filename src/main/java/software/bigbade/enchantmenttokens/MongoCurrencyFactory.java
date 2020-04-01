@@ -32,6 +32,7 @@ import software.bigbade.enchantmenttokens.configuration.ConfigurationType;
 import software.bigbade.enchantmenttokens.currency.CurrencyFactory;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
+import java.util.Locale;
 import java.util.logging.Level;
 
 public class MongoCurrencyFactory implements CurrencyFactory {
@@ -86,9 +87,10 @@ public class MongoCurrencyFactory implements CurrencyFactory {
         if (document == null) {
             document = new Document("uuid", player.getUniqueId());
             document.put("gems", 0L);
+            document.put("locale", Locale.getDefault().toLanguageTag());
             collection.insertOne(document);
         }
-        return new MongoCurrencyHandler(collection, document.getLong("gems"));
+        return new MongoCurrencyHandler(collection, document.getLong("gems"), Locale.forLanguageTag(document.getString("locale")));
     }
 
     @Override
