@@ -28,7 +28,7 @@ import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
 import java.util.Locale;
 
 public class MongoCurrencyHandler implements CurrencyHandler {
-    private MongoCollection<Document> collection;
+    private final MongoCollection<Document> collection;
     private long gems;
     private Locale locale;
 

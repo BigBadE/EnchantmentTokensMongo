@@ -36,9 +36,9 @@ import java.util.Locale;
 import java.util.logging.Level;
 
 public class MongoCurrencyFactory implements CurrencyFactory {
-    private MongoClient client;
+    private final MongoClient client;
     private MongoCollection<Document> collection;
-    private boolean loaded;
+    private final boolean loaded;
 
     public MongoCurrencyFactory(ConfigurationSection section) {
         EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Loading MongoDB database");
