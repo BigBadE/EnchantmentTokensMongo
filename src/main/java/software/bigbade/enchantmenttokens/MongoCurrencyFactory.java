@@ -31,6 +31,7 @@ import org.bukkit.entity.Player;
 import software.bigbade.enchantmenttokens.configuration.ConfigurationType;
 import software.bigbade.enchantmenttokens.currency.CurrencyFactory;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
+import software.bigbade.enchantmenttokens.utils.SchedulerHandler;
 
 import java.util.Locale;
 import java.util.logging.Level;
@@ -40,7 +41,7 @@ public class MongoCurrencyFactory implements CurrencyFactory {
     private MongoCollection<Document> collection;
     private boolean loaded;
 
-    public MongoCurrencyFactory(ConfigurationSection section) {
+    public MongoCurrencyFactory(ConfigurationSection section, SchedulerHandler scheduler) {
         EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Loading MongoDB database");
 
         String username = new ConfigurationType<>("").getValue("username", section);
@@ -67,18 +68,19 @@ public class MongoCurrencyFactory implements CurrencyFactory {
                     builder.credential(MongoCredential.createCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
             }
 
-
-        client = MongoClients.create(builder.build());
-        String collectionName = new ConfigurationType<>("players").getValue("section", section);
-        collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
-
-        if (collection == null) {
-            EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Creating new database section");
-            client.getDatabase(EnchantmentTokens.NAME).createCollection(collectionName);
+        scheduler.runTaskAsync(() -> {
+            client = MongoClients.create(builder.build());
+            String collectionName = new ConfigurationType<>("players").getValue("section", section);
             collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
-        }
 
-        loaded = true;
+            if (collection == null) {
+                EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Creating new database section");
+                client.getDatabase(EnchantmentTokens.NAME).createCollection(collectionName);
+                collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
+            }
+
+            loaded = true;
+        });
     }
 
     @Override
@@ -87,7 +89,12 @@ public class MongoCurrencyFactory implements CurrencyFactory {
         if (document == null) {
             document = new Document("uuid", player.getUniqueId());
             document.put("gems", 0L);
-            document.put("locale", Locale.getDefault().toLanguageTag());
+            try {
+                document.put("locale", Locale.forLanguageTag(player.getLocale()).toLanguageTag());
+            } catch (NullPointerException e) {
+                //Some resource packs can mess this up
+                document.put("locale", Locale.getDefault().toLanguageTag());
+            }
             collection.insertOne(document);
         }
         return new MongoCurrencyHandler(collection, document.getLong("gems"), Locale.forLanguageTag(document.getString("locale")));
