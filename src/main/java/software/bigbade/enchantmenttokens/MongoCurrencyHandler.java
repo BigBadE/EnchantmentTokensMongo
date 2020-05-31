@@ -29,8 +29,12 @@ import software.bigbade.enchantmenttokens.utils.SchedulerHandler;
 import java.util.Locale;
 
 public class MongoCurrencyHandler implements CurrencyHandler {
+<<<<<<< HEAD
     private final SchedulerHandler schedulerHandler;
     private MongoCollection<Document> collection;
+=======
+    private final MongoCollection<Document> collection;
+>>>>>>> 8baa0e413e5ff0ab0889853176561f1df7abef29
     private long gems;
     private Locale locale;
 
