@@ -24,15 +24,21 @@ import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bukkit.entity.Player;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
+import software.bigbade.enchantmenttokens.utils.SchedulerHandler;
 
 import java.util.Locale;
 
 public class MongoCurrencyHandler implements CurrencyHandler {
-    private final MongoCollection<Document> collection;
+    private final SchedulerHandler schedulerHandler;
+    private MongoCollection<Document> collection;
     private long gems;
     private Locale locale;
 
-    public MongoCurrencyHandler(MongoCollection<Document> collection, long gems, Locale locale) {
+    public MongoCurrencyHandler(SchedulerHandler schedulerHandler) {
+        this.schedulerHandler = schedulerHandler;
+    }
+
+    void setup(MongoCollection<Document> collection, long gems, Locale locale) {
         setAmount(gems);
         this.collection = collection;
         this.locale = locale;
@@ -55,6 +61,14 @@ public class MongoCurrencyHandler implements CurrencyHandler {
 
     @Override
     public void savePlayer(Player player, boolean async) {
+        if(async) {
+            schedulerHandler.runTaskAsync(() -> save(player));
+        } else {
+            save(player);
+        }
+    }
+
+    private void save(Player player) {
         collection.updateOne(Filters.eq("uuid", player.getUniqueId()), Updates.combine(Updates.set("gems", getAmount()), Updates.set("locale", locale.toLanguageTag())));
     }
 

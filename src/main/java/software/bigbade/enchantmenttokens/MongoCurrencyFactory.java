@@ -37,6 +37,7 @@ import java.util.Locale;
 import java.util.logging.Level;
 
 public class MongoCurrencyFactory implements CurrencyFactory {
+    private final SchedulerHandler scheduler;
     private MongoClient client;
     private MongoCollection<Document> collection;
     private boolean loaded;
@@ -44,6 +45,7 @@ public class MongoCurrencyFactory implements CurrencyFactory {
     public MongoCurrencyFactory(ConfigurationSection section, SchedulerHandler scheduler) {
         EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Loading MongoDB database");
 
+        this.scheduler = scheduler;
         String username = new ConfigurationType<>("").getValue("username", section);
         String password = new ConfigurationType<>("").getValue("password", section);
 
@@ -85,19 +87,24 @@ public class MongoCurrencyFactory implements CurrencyFactory {
 
     @Override
     public CurrencyHandler newInstance(Player player) {
-        Document document = collection.find(Filters.eq("uuid", player.getUniqueId())).first();
-        if (document == null) {
-            document = new Document("uuid", player.getUniqueId());
-            document.put("gems", 0L);
-            try {
-                document.put("locale", Locale.forLanguageTag(player.getLocale()).toLanguageTag());
-            } catch (NullPointerException e) {
-                //Some resource packs can mess this up
-                document.put("locale", Locale.getDefault().toLanguageTag());
+        MongoCurrencyHandler handler = new MongoCurrencyHandler(scheduler);
+        scheduler.runTaskAsync(() -> {
+            Document document = collection.find(Filters.eq("uuid", player.getUniqueId())).first();
+            if (document == null) {
+                final Document newDocument = new Document("uuid", player.getUniqueId());
+                newDocument.put("gems", 0L);
+                try {
+                    newDocument.put("locale", Locale.forLanguageTag(player.getLocale()).toLanguageTag());
+                } catch (NullPointerException e) {
+                    //Some resource packs can mess this up
+                    newDocument.put("locale", Locale.getDefault().toLanguageTag());
+                }
+                scheduler.runTaskAsync(() -> collection.insertOne(newDocument));
+                document = newDocument;
             }
-            collection.insertOne(document);
-        }
-        return new MongoCurrencyHandler(collection, document.getLong("gems"), Locale.forLanguageTag(document.getString("locale")));
+            handler.setup(collection, document.getLong("gems"), Locale.forLanguageTag(document.getString("locale")));
+        });
+        return handler;
     }
 
     @Override
