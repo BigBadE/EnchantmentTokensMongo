@@ -60,9 +60,9 @@ public class MongoCurrencyFactory implements CurrencyFactory {
                     break;
                 case "PLAIN":
                     builder.credential(MongoCredential.createPlainCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
-                    EnchantmentTokens.getEnchantLogger().log(Level.WARNING, "PLAIN VERIFICATION IS ENABLED. NOT SUGGESTED!");
+                    EnchantmentTokens.getEnchantLogger().log(Level.WARNING, "PLAIN VERIFICATION IS ENABLED. THIS IS A SERIOUS SECURITY BREACH!");
                     break;
-                case "SSH":
+                case "X509":
                     builder.credential(MongoCredential.createMongoX509Credential());
                     break;
                 case "DEFAULT":
