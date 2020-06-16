@@ -21,22 +21,21 @@ package software.bigbade.enchantmenttokens;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bukkit.entity.Player;
+import software.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
-import software.bigbade.enchantmenttokens.utils.SchedulerHandler;
 
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
+@RequiredArgsConstructor
 public class MongoCurrencyHandler implements CurrencyHandler {
-    private final SchedulerHandler schedulerHandler;
+    private final String uuid;
     private MongoCollection<Document> collection;
     private long gems;
     private Locale locale;
-
-    public MongoCurrencyHandler(SchedulerHandler schedulerHandler) {
-        this.schedulerHandler = schedulerHandler;
-    }
 
     void setup(MongoCollection<Document> collection, long gems, Locale locale) {
         setAmount(gems);
@@ -45,27 +44,25 @@ public class MongoCurrencyHandler implements CurrencyHandler {
     }
 
     @Override
-    public long getAmount() {
-        return gems;
+    public CompletableFuture<Long> getAmount() {
+        CompletableFuture<Long> future = new CompletableFuture<>();
+        new EnchantmentChain(uuid).execute(() -> future.complete(gems));
+        return future;
     }
 
     @Override
     public void setAmount(long amount) {
-        gems = amount;
+        new EnchantmentChain(uuid).execute(() -> gems = amount);
     }
 
     @Override
     public void addAmount(long amount) {
-        gems += amount;
+        new EnchantmentChain(uuid).execute(() -> gems += amount);
     }
 
     @Override
-    public void savePlayer(Player player, boolean async) {
-        if(async) {
-            schedulerHandler.runTaskAsync(() -> save(player));
-        } else {
-            save(player);
-        }
+    public void savePlayer(Player player) {
+        save(player);
     }
 
     private void save(Player player) {
