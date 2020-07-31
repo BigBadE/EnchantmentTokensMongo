@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.mongodb:mongodb-driver-sync:4.0.4'
+    implementation 'org.mongodb:mongodb-driver-sync:4.1.0'
     shadow 'org.spigotmc:spigot-api:1.15.2-R0.1-SNAPSHOT'
     shadow 'software.bigbade:EnchantmentTokensAPI:1.0'
 
