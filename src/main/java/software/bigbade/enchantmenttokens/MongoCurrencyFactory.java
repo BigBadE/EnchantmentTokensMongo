@@ -50,7 +50,7 @@ public class MongoCurrencyFactory implements CurrencyFactory {
         String password = new ConfigurationType<>("").getValue("password", section);
 
         MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString(new ConfigurationType<>("").getValue("database", section))).applicationName(EnchantmentTokens.NAME);
-        if (!username.equals("") && !password.equals(""))
+        if (!username.equals("") && !password.equals("")) {
             switch (new ConfigurationType<>("DEFAULT").getValue("security", section)) {
                 case "SHA256":
                     builder.credential(MongoCredential.createScramSha256Credential(username, EnchantmentTokens.NAME, password.toCharArray()));
@@ -69,6 +69,7 @@ public class MongoCurrencyFactory implements CurrencyFactory {
                 default:
                     builder.credential(MongoCredential.createCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
             }
+        }
 
         new EnchantmentChain().async(() -> {
             client = MongoClients.create(builder.build());
@@ -92,11 +93,10 @@ public class MongoCurrencyFactory implements CurrencyFactory {
             if (document == null) {
                 final Document newDocument = new Document("uuid", player.getUniqueId());
                 newDocument.put("gems", 0L);
-                try {
-                    newDocument.put(LOCALE, Locale.forLanguageTag(player.getLocale()).toLanguageTag());
-                } catch (NullPointerException e) {
+                Locale locale = Locale.forLanguageTag(player.getLocale());
+                if(locale.getLanguage().isEmpty()) {
                     //Some resource packs can mess this up
-                    newDocument.put(LOCALE, Locale.getDefault().toLanguageTag());
+                    locale = Locale.getDefault()
                 }
                 collection.insertOne(newDocument);
                 document = newDocument;
