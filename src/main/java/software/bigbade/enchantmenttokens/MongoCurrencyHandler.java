@@ -23,7 +23,8 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
-import org.bukkit.entity.Player;
+import org.bukkit.NamespacedKey;
+import software.bigbade.enchantmenttokens.api.EnchantmentPlayer;
 import software.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
@@ -46,27 +47,27 @@ public class MongoCurrencyHandler implements CurrencyHandler {
     @Override
     public CompletableFuture<Long> getAmount() {
         CompletableFuture<Long> future = new CompletableFuture<>();
-        new EnchantmentChain(uuid).execute(() -> future.complete(gems));
+        new EnchantmentChain<>(uuid).execute(() -> future.complete(gems));
         return future;
     }
 
     @Override
     public void setAmount(long amount) {
-        new EnchantmentChain(uuid).execute(() -> gems = amount);
+        new EnchantmentChain<>(uuid).execute(() -> gems = amount);
     }
 
     @Override
     public void addAmount(long amount) {
-        new EnchantmentChain(uuid).execute(() -> gems += amount);
+        new EnchantmentChain<>(uuid).execute(() -> gems += amount);
     }
 
     @Override
-    public void savePlayer(Player player) {
-        save(player);
+    public void savePlayer(EnchantmentPlayer player) {
+        save();
     }
 
-    private void save(Player player) {
-        collection.updateOne(Filters.eq("uuid", player.getUniqueId()), Updates.combine(Updates.set("gems", getAmount()), Updates.set("locale", locale.toLanguageTag())));
+    private void save() {
+        collection.updateOne(Filters.eq("uuid", uuid), Updates.combine(Updates.set("gems", getAmount()), Updates.set("locale", locale.toLanguageTag())));
     }
 
     @Override
@@ -82,5 +83,20 @@ public class MongoCurrencyHandler implements CurrencyHandler {
     @Override
     public String name() {
         return "mongodb";
+    }
+
+    @Override
+    public void storePlayerData(NamespacedKey namespacedKey, String s) {
+
+    }
+
+    @Override
+    public String getPlayerData(NamespacedKey namespacedKey) {
+        return null;
+    }
+
+    @Override
+    public void removePlayerData(NamespacedKey namespacedKey) {
+
     }
 }
