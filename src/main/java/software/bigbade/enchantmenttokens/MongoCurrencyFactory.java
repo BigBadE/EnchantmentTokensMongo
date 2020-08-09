@@ -26,6 +26,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import software.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
@@ -33,15 +34,18 @@ import software.bigbade.enchantmenttokens.configuration.ConfigurationType;
 import software.bigbade.enchantmenttokens.currency.CurrencyFactory;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 public class MongoCurrencyFactory implements CurrencyFactory {
+    private static final Pattern NAMESPACED_KEY = Pattern.compile(":");
+    private static final String LOCALE = "locale";
     private MongoClient client;
     private MongoCollection<Document> collection;
     private boolean loaded;
-
-    private static final String LOCALE = "locale";
 
     public MongoCurrencyFactory(ConfigurationSection section) {
         EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Loading MongoDB database");
@@ -71,7 +75,7 @@ public class MongoCurrencyFactory implements CurrencyFactory {
             }
         }
 
-        new EnchantmentChain().async(() -> {
+        new EnchantmentChain<>().async(() -> {
             client = MongoClients.create(builder.build());
             String collectionName = new ConfigurationType<>("players").getValue("section", section);
             collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
@@ -84,24 +88,37 @@ public class MongoCurrencyFactory implements CurrencyFactory {
         }).execute(() -> loaded = true);
     }
 
+    @SuppressWarnings("deprecation")
+    private static NamespacedKey getKey(String key) {
+        String[] data = NAMESPACED_KEY.split(key);
+        assert data.length == 2;
+        return new NamespacedKey(data[0], data[1]);
+    }
+
     @Override
     public CurrencyHandler newInstance(Player player) {
         MongoCurrencyHandler handler = new MongoCurrencyHandler(player.getUniqueId().toString());
 
-        new EnchantmentChain(player.getUniqueId().toString()).async(() -> {
+        new EnchantmentChain<>(player.getUniqueId().toString()).async(() -> {
             Document document = collection.find(Filters.eq("uuid", player.getUniqueId())).first();
             if (document == null) {
                 final Document newDocument = new Document("uuid", player.getUniqueId());
                 newDocument.put("gems", 0L);
                 Locale locale = Locale.forLanguageTag(player.getLocale());
-                if(locale.getLanguage().isEmpty()) {
+                if (locale.getLanguage().isEmpty()) {
                     //Some resource packs can mess this up
-                    locale = Locale.getDefault()
+                    locale = Locale.getDefault();
                 }
+                newDocument.put(LOCALE, locale.toLanguageTag());
                 collection.insertOne(newDocument);
-                document = newDocument;
+                handler.setup(collection, 0, locale, new HashMap<>());
+            } else {
+                Map<NamespacedKey, String> playerData = new HashMap<>();
+                for (Map.Entry<String, Object> entry : document.get("data", Document.class).entrySet()) {
+                    playerData.put(getKey(entry.getKey()), entry.getValue().toString());
+                }
+                handler.setup(collection, document.getLong("gems"), Locale.forLanguageTag(document.getString(LOCALE)), playerData);
             }
-            handler.setup(collection, document.getLong("gems"), Locale.forLanguageTag(document.getString(LOCALE)));
         }).execute();
         return handler;
     }

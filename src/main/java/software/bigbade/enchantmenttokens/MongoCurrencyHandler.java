@@ -29,19 +29,22 @@ import software.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
 public class MongoCurrencyHandler implements CurrencyHandler {
     private final String uuid;
-    private MongoCollection<Document> collection;
     private long gems;
+    private Map<NamespacedKey, String> playerData;
+    private MongoCollection<Document> collection;
     private Locale locale;
 
-    void setup(MongoCollection<Document> collection, long gems, Locale locale) {
+    void setup(MongoCollection<Document> collection, long gems, Locale locale, Map<NamespacedKey, String> playerData) {
         setAmount(gems);
         this.collection = collection;
         this.locale = locale;
+        this.playerData = playerData;
     }
 
     @Override
@@ -67,7 +70,11 @@ public class MongoCurrencyHandler implements CurrencyHandler {
     }
 
     private void save() {
-        collection.updateOne(Filters.eq("uuid", uuid), Updates.combine(Updates.set("gems", getAmount()), Updates.set("locale", locale.toLanguageTag())));
+        Document bson = new Document();
+        for (Map.Entry<NamespacedKey, String> data : playerData.entrySet()) {
+            bson.put(data.getKey().toString(), data.getValue());
+        }
+        collection.updateOne(Filters.eq("uuid", uuid), Updates.combine(Updates.set("gems", getAmount()), Updates.set("locale", locale.toLanguageTag()), Updates.set("data", bson)));
     }
 
     @Override
@@ -86,17 +93,17 @@ public class MongoCurrencyHandler implements CurrencyHandler {
     }
 
     @Override
-    public void storePlayerData(NamespacedKey namespacedKey, String s) {
-
+    public void storePlayerData(NamespacedKey namespacedKey, String value) {
+        playerData.put(namespacedKey, value);
     }
 
     @Override
     public String getPlayerData(NamespacedKey namespacedKey) {
-        return null;
+        return playerData.get(namespacedKey);
     }
 
     @Override
     public void removePlayerData(NamespacedKey namespacedKey) {
-
+        playerData.remove(namespacedKey);
     }
 }
