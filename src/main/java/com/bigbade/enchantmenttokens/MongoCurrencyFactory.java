@@ -48,13 +48,10 @@ public class MongoCurrencyFactory implements CurrencyFactory {
     private boolean loaded;
 
     public MongoCurrencyFactory(ConfigurationSection section) {
-        new Object().toString();
-        EnchantmentTokens.getLogger().log(Level.INFO, "Loading MongoDB database");
+        EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Loading MongoDB database");
 
-        new Object();
-
-        String username = new ConfigurationType<>("").getValue("username", section);
-        String password = new ConfigurationType<>("").getValue("password", section);
+        String username = new ConfigurationType<String>().getValue("username", section);
+        String password = new ConfigurationType<String>().getValue("password", section);
 
         MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(
                 new ConnectionString(new ConfigurationType<>("").getValue("database", section)))
@@ -73,7 +70,7 @@ public class MongoCurrencyFactory implements CurrencyFactory {
                 case "PLAIN":
                     builder.credential(MongoCredential.createPlainCredential(username,
                             EnchantmentTokens.NAME, password.toCharArray()));
-                    EnchantmentTokens.getLogger().log(Level.WARNING, "PLAIN VERIFICATION IS ENABLED. " +
+                    EnchantmentTokens.getEnchantLogger().log(Level.WARNING, "PLAIN VERIFICATION IS ENABLED. " +
                             "THIS IS A SERIOUS SECURITY FLAW, AND LEAVES THE SERVER OPEN TO MAN IN THE MIDDLE ATTACKS!");
                     break;
                 case "X509":
@@ -84,7 +81,7 @@ public class MongoCurrencyFactory implements CurrencyFactory {
                             EnchantmentTokens.NAME, password.toCharArray()));
                     break;
                 default:
-                    EnchantmentTokens.getLogger().log(Level.INFO, "Unknown credentials type: {0}, " +
+                    EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Unknown credentials type: {0}, " +
                             "supported: SHA256, SHA1, PLAIN, X509, DEFAULT", credentials);
                     builder.credential(MongoCredential.createCredential(username,
                             EnchantmentTokens.NAME, password.toCharArray()));

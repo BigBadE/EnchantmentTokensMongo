@@ -74,7 +74,9 @@ public class MongoCurrencyHandler implements CurrencyHandler {
         for (Map.Entry<NamespacedKey, String> data : playerData.entrySet()) {
             bson.put(data.getKey().toString(), data.getValue());
         }
-        collection.updateOne(Filters.eq("uuid", uuid), Updates.combine(Updates.set("gems", getAmount()), Updates.set("locale", locale.toLanguageTag()), Updates.set("data", bson)));
+        collection.updateOne(Filters.eq("uuid", uuid),
+                Updates.combine(Updates.set("gems", getAmount()),
+                        Updates.set("locale", locale.toLanguageTag()), Updates.set("data", bson)));
     }
 
     @Override
