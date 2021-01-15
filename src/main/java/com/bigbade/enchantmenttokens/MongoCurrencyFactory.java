@@ -1,6 +1,6 @@
 /*
- * Addons for the Custom Enchantment API in Minecraft
- * Copyright (C) 2020 BigBadE
+ * Custom enchantments for Minecraft
+ * Copyright (C) 2021 Big_Bad_E
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package software.bigbade.enchantmenttokens;
+package com.bigbade.enchantmenttokens;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
@@ -29,10 +29,10 @@ import org.bson.Document;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import software.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
-import software.bigbade.enchantmenttokens.configuration.ConfigurationType;
-import software.bigbade.enchantmenttokens.currency.CurrencyFactory;
-import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
+import com.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
+import com.bigbade.enchantmenttokens.configuration.ConfigurationType;
+import com.bigbade.enchantmenttokens.currency.CurrencyFactory;
+import com.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -48,30 +48,46 @@ public class MongoCurrencyFactory implements CurrencyFactory {
     private boolean loaded;
 
     public MongoCurrencyFactory(ConfigurationSection section) {
-        EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Loading MongoDB database");
+        new Object().toString();
+        EnchantmentTokens.getLogger().log(Level.INFO, "Loading MongoDB database");
+
+        new Object();
 
         String username = new ConfigurationType<>("").getValue("username", section);
         String password = new ConfigurationType<>("").getValue("password", section);
 
-        MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString(new ConfigurationType<>("").getValue("database", section))).applicationName(EnchantmentTokens.NAME);
+        MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(
+                new ConnectionString(new ConfigurationType<>("").getValue("database", section)))
+                .applicationName(EnchantmentTokens.NAME);
         if (!username.equals("") && !password.equals("")) {
-            switch (new ConfigurationType<>("DEFAULT").getValue("security", section)) {
+            String credentials = new ConfigurationType<>("DEFAULT").getValue("credentials", section);
+            switch (credentials) {
                 case "SHA256":
-                    builder.credential(MongoCredential.createScramSha256Credential(username, EnchantmentTokens.NAME, password.toCharArray()));
+                    builder.credential(MongoCredential.createScramSha256Credential(username,
+                            EnchantmentTokens.NAME, password.toCharArray()));
                     break;
                 case "SHA1":
-                    builder.credential(MongoCredential.createScramSha1Credential(username, EnchantmentTokens.NAME, password.toCharArray()));
+                    builder.credential(MongoCredential.createScramSha1Credential(username,
+                            EnchantmentTokens.NAME, password.toCharArray()));
                     break;
                 case "PLAIN":
-                    builder.credential(MongoCredential.createPlainCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
-                    EnchantmentTokens.getEnchantLogger().log(Level.WARNING, "PLAIN VERIFICATION IS ENABLED. THIS IS A SERIOUS SECURITY BREACH!");
+                    builder.credential(MongoCredential.createPlainCredential(username,
+                            EnchantmentTokens.NAME, password.toCharArray()));
+                    EnchantmentTokens.getLogger().log(Level.WARNING, "PLAIN VERIFICATION IS ENABLED. " +
+                            "THIS IS A SERIOUS SECURITY FLAW, AND LEAVES THE SERVER OPEN TO MAN IN THE MIDDLE ATTACKS!");
                     break;
                 case "X509":
                     builder.credential(MongoCredential.createMongoX509Credential());
                     break;
                 case "DEFAULT":
+                    builder.credential(MongoCredential.createCredential(username,
+                            EnchantmentTokens.NAME, password.toCharArray()));
+                    break;
                 default:
-                    builder.credential(MongoCredential.createCredential(username, EnchantmentTokens.NAME, password.toCharArray()));
+                    EnchantmentTokens.getLogger().log(Level.INFO, "Unknown credentials type: {0}, " +
+                            "supported: SHA256, SHA1, PLAIN, X509, DEFAULT", credentials);
+                    builder.credential(MongoCredential.createCredential(username,
+                            EnchantmentTokens.NAME, password.toCharArray()));
             }
         }
 
@@ -79,12 +95,6 @@ public class MongoCurrencyFactory implements CurrencyFactory {
             client = MongoClients.create(builder.build());
             String collectionName = new ConfigurationType<>("players").getValue("section", section);
             collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
-
-            if (collection == null) {
-                EnchantmentTokens.getEnchantLogger().log(Level.INFO, "Creating new database section");
-                client.getDatabase(EnchantmentTokens.NAME).createCollection(collectionName);
-                collection = client.getDatabase(EnchantmentTokens.NAME).getCollection(collectionName);
-            }
         }).execute(() -> loaded = true);
     }
 
@@ -107,7 +117,7 @@ public class MongoCurrencyFactory implements CurrencyFactory {
                 Locale locale = Locale.forLanguageTag(player.getLocale());
                 if (locale.getLanguage().isEmpty()) {
                     //Some resource packs can mess this up
-                    locale = Locale.getDefault();
+                    locale = EnchantmentTokens.getDefaultLocale();
                 }
                 newDocument.put(LOCALE, locale.toLanguageTag());
                 collection.insertOne(newDocument);

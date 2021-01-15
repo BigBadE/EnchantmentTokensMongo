@@ -1,2 +1,4 @@
 name: mongo
 displayName: MongoDB
+
+credentials: DEFAULT

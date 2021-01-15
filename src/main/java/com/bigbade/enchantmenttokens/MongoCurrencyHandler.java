@@ -1,6 +1,6 @@
 /*
- * Addons for the Custom Enchantment API in Minecraft
- * Copyright (C) 2020 BigBadE
+ * Custom enchantments for Minecraft
+ * Copyright (C) 2021 Big_Bad_E
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package software.bigbade.enchantmenttokens;
+package com.bigbade.enchantmenttokens;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
@@ -24,9 +24,9 @@ import com.mongodb.client.model.Updates;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bukkit.NamespacedKey;
-import software.bigbade.enchantmenttokens.api.EnchantmentPlayer;
-import software.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
-import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
+import com.bigbade.enchantmenttokens.api.EnchantmentPlayer;
+import com.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
+import com.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
 import java.util.Locale;
 import java.util.Map;
